@@ -22,7 +22,7 @@ blogRouter.use('/*', async (c, next) => {
     const user = await verify(authheader, c.env.JWT_SECRET);
     if (user) {
       //@ts-ignore
-      c.set("userId", user.id);
+      c.set("userId", user.id); // Ensure `user.id` exists in the JWT
       await next();
     } else {
       c.status(403);
@@ -50,7 +50,7 @@ blogRouter.post('/', async (c) => {
     });
   }
   
-  const userId = c.get('userId');
+  const userId = parseInt(c.get('userId'), 10); // Parse userId to an integer
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
@@ -59,7 +59,7 @@ blogRouter.post('/', async (c) => {
     data: {
       title: body.title,
       content: body.content,
-      authorId: userId, // Passing `userId` directly as string
+      authorId: userId, // Pass userId as an integer
     }
   });
 
@@ -86,7 +86,7 @@ blogRouter.put('/', async (c) => {
 
   const blog = await prisma.post.update({
     where: {
-      id: body.id
+      id: body.id // Prisma expects `id` to be an integer
     },
     data: {
       title: body.title,
@@ -125,7 +125,7 @@ blogRouter.get('/bulk', async (c) => {
 
 // Fetch a blog post by its ID
 blogRouter.get('/:id', async (c) => {
-  const id = c.req.param("id");
+  const id = parseInt(c.req.param("id"), 10); // Parse `id` to an integer
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
@@ -133,7 +133,7 @@ blogRouter.get('/:id', async (c) => {
   try {
     const blog = await prisma.post.findFirst({
       where: { 
-        id 
+        id: id // Ensure id is an integer here
       },
       select: {
         title: true,
